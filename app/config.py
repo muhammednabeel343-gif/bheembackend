@@ -9,20 +9,20 @@ class Settings(BaseSettings):
     secret_key: str = Field("your-secret-key-change-this-in-production", env="SECRET_KEY")
     algorithm: str = "HS256"
     access_token_expire_minutes: int = 30
-    cors_origins: List[str] = Field(
-        default_factory=lambda: [
-            "http://localhost:3000",
-            "http://localhost:5173",
-            "http://localhost:5174",
-            "http://127.0.0.1:3000",
-            "http://127.0.0.1:5173",
-            "http://127.0.0.1:5174",
-        ],
-        env="CORS_ORIGINS",
-    )
+    cors_origins: str = Field("", env="CORS_ORIGINS")
 
     class Config:
         env_file = ".env"
+
+    @property
+    def cors_origins_list(self) -> List[str]:
+        value = (self.cors_origins or "").strip()
+        if not value:
+            return []
+        if value.startswith("[") and value.endswith("]"):
+            import json
+            return json.loads(value)
+        return [item.strip() for item in value.split(",") if item.strip()]
 
 
 settings = Settings()
