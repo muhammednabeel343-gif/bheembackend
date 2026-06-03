@@ -1,4 +1,4 @@
-from typing import List, Optional, Tuple
+from typing import List, Optional, Tuple, Dict
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 
@@ -13,7 +13,7 @@ def list_games(
     category: Optional[str] = None,
     page: int = 1,
     limit: int = 20,
-) -> Tuple[List[Game], int]:
+) -> Tuple[List[Game], int, Dict[int, bool]]:
 
     query = db.query(Game)
 
@@ -34,7 +34,9 @@ def list_games(
         .all()
     )
 
-    return items, total
+    favorite_map = load_favorite_map(db, user_id)
+
+    return items, total, favorite_map
 
 
 def get_game_by_id(db: Session, game_id: int) -> Optional[Game]:

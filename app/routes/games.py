@@ -21,8 +21,7 @@ async def read_games(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    games, total = list_games(db, current_user.id, search, category, page, limit)
-    favorite_map = load_favorite_map(db, current_user.id)
+    games, total, favorite_map = list_games(db, current_user.id, search, category, page, limit)
 
     items = [
         GameListItem(

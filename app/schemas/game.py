@@ -8,10 +8,10 @@ class RequirementResponse(BaseModel):
     id: int
     cpu: str
     gpu: str
-    ram: int
-    storage: int
+    ram_gb: int
+    storage_gb: int
     directx: Optional[str] = None
-    os: Optional[str] = None
+    operating_system: Optional[str] = None
 
     class Config:
         from_attributes = True

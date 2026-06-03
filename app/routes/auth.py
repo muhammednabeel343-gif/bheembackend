@@ -27,7 +27,7 @@ async def register(user: UserCreate, db: Session = Depends(get_db)):
     db_user = User(
         email=user.email,
         username=user.username,
-        password_hash=hashed_password,
+        hashed_password=hashed_password,
     )
     db.add(db_user)
     try:
