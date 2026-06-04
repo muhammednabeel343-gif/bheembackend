@@ -3,7 +3,6 @@ from sqlalchemy.orm import Session
 from app.models.game import Game
 from app.models.requirement import Requirement
 
-
 def seed_sample_games(db: Session) -> None:
     if db.query(Game).count() > 0:
         return

@@ -1,4 +1,5 @@
-﻿from sqlalchemy import Column, Integer, String, Date, DateTime, func
+﻿from datetime import date
+from sqlalchemy import Column, Integer, String, Date, DateTime, ForeignKey, func
 from sqlalchemy.orm import relationship
 from app.database import Base
 
@@ -9,10 +10,11 @@ class Game(Base):
     id = Column(Integer, primary_key=True, index=True)
 
     name = Column(String(255), nullable=False)
-    genre = Column(String(100))
-    publisher = Column(String(255))
-    release_date = Column(Date)
-    image_url = Column(String(1000))
+    description = Column(String(1000), nullable=True)
+    genre = Column(String(100), nullable=True)
+    publisher = Column(String(255), nullable=True)
+    release_date = Column(Date, nullable=True)
+    image_url = Column(String(1000), nullable=True)
 
     created_at = Column(DateTime(timezone=False), server_default=func.now())
 

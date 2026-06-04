@@ -9,7 +9,7 @@ from app.models.user import User
 router = APIRouter(prefix="/favorites", tags=["favorites"])
 
 
-@router.get("/", response_model=FavoriteListResponse)
+@router.get("", response_model=FavoriteListResponse)
 async def read_favorites(current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     favorites = list_user_favorites(db, current_user.id)
     items = [
@@ -25,7 +25,7 @@ async def read_favorites(current_user: User = Depends(get_current_user), db: Ses
     return {"favorites": items}
 
 
-@router.post("/", response_model=FavoriteItem)
+@router.post("", response_model=FavoriteItem)
 async def create_favorite(payload: FavoriteCreate, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     favorite = add_favorite(db, current_user.id, payload.game_id)
     return FavoriteItem(

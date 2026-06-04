@@ -3,6 +3,10 @@ import subprocess
 from app.schemas.compatibility import SimulatorRequest
 from app.services.compatibility_service import (
     compute_compatibility_report,
+    get_all_cpus,
+    get_all_gpus,
+    get_all_rams,
+    get_all_storages,
 )
 from app.models.game import Game
 from app.models.user_scan import UserScan
@@ -18,16 +22,11 @@ from app.services.compatibility_service import save_system_scan
 from app.database import get_db
 from app.authentication.jwt import get_current_user
 from app.models.user import User
-from app.services.compatibility_service import (
-    CPU_BENCHMARKS,
-    GPU_BENCHMARKS,
-)
 
 import psutil
 import cpuinfo
 
 router = APIRouter(prefix="/system", tags=["system"])
-
 
 def get_gpu_name():
     try:
@@ -49,17 +48,14 @@ def get_gpu_name():
             if line.strip() and line.strip() != "Name"
         ]
 
-        # Prefer NVIDIA
         for gpu in gpus:
             if "NVIDIA" in gpu.upper():
                 return gpu
 
-        # Then AMD
         for gpu in gpus:
             if "AMD" in gpu.upper() or "RADEON" in gpu.upper():
                 return gpu
 
-        # Otherwise use first available GPU
         if gpus:
             return gpus[0]
 
@@ -70,20 +66,27 @@ def get_gpu_name():
 
 
 def get_real_system_specs():
-    cpu = cpuinfo.get_cpu_info().get(
-        "brand_raw",
-        "Unknown CPU"
-    )
+    try:
+        cpu = cpuinfo.get_cpu_info().get("brand_raw", "Unknown CPU")
+    except Exception as e:
+        print("CPU DETECTION ERROR:", e)
+        cpu = "Unknown CPU"
 
-    ram_gb = round(
-        psutil.virtual_memory().total / (1024 ** 3)
-    )
+    try:
+        ram_gb = round(psutil.virtual_memory().total / (1024 ** 3))
+    except Exception:
+        ram_gb = 0
 
-    storage_gb = round(
-        psutil.disk_usage("C:\\").total / (1024 ** 3)
-    )
+    try:
+        storage_gb = round(psutil.disk_usage("C:\\").total / (1024 ** 3))
+    except Exception:
+        storage_gb = 0
 
-    gpu_name = get_gpu_name()
+    try:
+        gpu_name = get_gpu_name()
+    except Exception as e:
+        print("GPU DETECTION ERROR:", e)
+        gpu_name = "Unknown GPU"
 
     return {
         "cpu": cpu,
@@ -143,27 +146,32 @@ async def save_scan(
         traceback.print_exc()
         print("SAVE_SCAN ERROR:", repr(e))
         raise
+
+
 @router.get("/hardware/cpus")
-async def get_cpus():
-    return [
-        {
-            "name": cpu,
-            "score": score,
-        }
-        for cpu, score in CPU_BENCHMARKS.items()
-    ]
+async def get_cpus(db: Session = Depends(get_db)):
+    cpus = get_all_cpus(db)
+    return [{"name": cpu.name, "score": 0} for cpu in cpus]
 
 
 @router.get("/hardware/gpus")
-async def get_gpus():
-    return [
-        {
-            "name": gpu,
-            "score": score,
-        }
-        for gpu, score in GPU_BENCHMARKS.items()
-    ]
-    
+async def get_gpus(db: Session = Depends(get_db)):
+    gpus = get_all_gpus(db)
+    return [{"name": gpu.name, "score": 0} for gpu in gpus]
+
+
+@router.get("/hardware/rams")
+async def get_rams(db: Session = Depends(get_db)):
+    rams = get_all_rams(db)
+    return [{"size": ram.size, "value": ram.size, "label": f"{ram.size} GB"} for ram in rams]
+
+
+@router.get("/hardware/storages")
+async def get_storages(db: Session = Depends(get_db)):
+    storages = get_all_storages(db)
+    return [{"size": storage.size} for storage in storages]
+
+
 @router.post("/simulate")
 async def simulate_compatibility(
     payload: SimulatorRequest,
@@ -178,7 +186,9 @@ async def simulate_compatibility(
     if not game:
         raise ValueError("Game not found")
 
-    requirement = game.requirements[0]
+    requirement = game.requirements[0] if game.requirements else None
+    if not requirement:
+        raise ValueError("Game requirements not found")
 
     fake_scan = UserScan(
         cpu=payload.cpu,

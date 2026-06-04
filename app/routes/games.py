@@ -12,7 +12,7 @@ from app.models.user import User
 router = APIRouter(prefix="/games", tags=["games"])
 
 
-@router.get("/", response_model=GameListResponse)
+@router.get("", response_model=GameListResponse)
 async def read_games(
     search: Optional[str] = Query(None, description="Search game titles"),
     category: Optional[str] = Query(None, description="Filter by category"),

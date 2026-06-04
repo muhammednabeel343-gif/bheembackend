@@ -16,6 +16,11 @@ from app.models import game  # noqa: F401
 from app.models import requirement  # noqa: F401
 from app.models import favorite  # noqa: F401
 from app.models import user_scan  # noqa: F401
+from app.models import admin  # noqa: F401
+from app.models import cpu  # noqa: F401
+from app.models import gpu  # noqa: F401
+from app.models import ram  # noqa: F401
+from app.models import storage  # noqa: F401
 
 config = context.config
 if config.config_file_name is not None:

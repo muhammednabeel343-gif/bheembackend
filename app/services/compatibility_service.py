@@ -1,12 +1,28 @@
-from typing import Optional
+from typing import Optional, List
 from sqlalchemy.orm import Session
 from app.models.user_scan import UserScan
 from app.models.game import Game
 from app.models.requirement import Requirement
+from app.models.cpu import CPU
+from app.models.gpu import GPU
+from app.models.ram import RAM
+from app.models.storage import Storage
 from app.schemas.compatibility import SaveSystemScanRequest
-from app.services.game_service import get_game_by_id
 from app.data.cpu_benchmarks import CPU_BENCHMARKS
 from app.data.gpu_benchmarks import GPU_BENCHMARKS
+from app.services.game_service import get_game_by_id
+
+def get_all_cpus(db: Session) -> List[CPU]:
+    return db.query(CPU).all()
+
+def get_all_gpus(db: Session) -> List[GPU]:
+    return db.query(GPU).all()
+
+def get_all_rams(db: Session) -> List[RAM]:
+    return db.query(RAM).all()
+
+def get_all_storages(db: Session) -> List[Storage]:
+    return db.query(Storage).all()
 
 def save_system_scan(db: Session, user_id: int, payload: SaveSystemScanRequest) -> UserScan:
     if payload.game_id is not None:
@@ -82,12 +98,12 @@ def compute_compatibility_report(requirement: Requirement, scan: UserScan) -> di
     )
 
     ram_ratio = min(
-        scan.ram_gb / max(requirement.ram_gb, 1),
+        scan.ram_gb / max(requirement.ram_gb or 1, 1),
         1.0
     )
 
     storage_ratio = min(
-        scan.storage_gb / max(requirement.storage_gb, 1),
+        scan.storage_gb / max(requirement.storage_gb or 1, 1),
         1.0
     )
     performance_score = (

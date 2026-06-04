@@ -18,8 +18,8 @@ def create_test_session():
 def test_add_and_remove_favorite():
     db = create_test_session()
 
-    user = User(username="testuser", email="test@example.com", password_hash="hash")
-    game = Game(title="Test Game", slug="test-game", genre="Adventure", category="Casual", publisher="Pub")
+    user = User(username="testuser", email="test@example.com", hashed_password="hash")
+    game = Game(name="Test Game", genre="Adventure", publisher="Pub")
     db.add(user)
     db.add(game)
     db.commit()

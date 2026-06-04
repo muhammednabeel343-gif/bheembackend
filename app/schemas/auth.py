@@ -28,6 +28,8 @@ class LoginRequest(BaseModel):
 class Token(BaseModel):
     access_token: str
     token_type: str
+    role: Optional[str] = "user"
+    admin: Optional[dict] = None
 
 
 class TokenData(BaseModel):

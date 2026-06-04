@@ -21,7 +21,7 @@ class GameListItem(BaseModel):
     id: int
     name: str
     genre: str
-    image_url: Optional[HttpUrl] = None
+    image_url: Optional[str] = None
     is_favorite: bool = False
 
     class Config:
@@ -34,7 +34,7 @@ class GameDetail(BaseModel):
     genre: str
     publisher: Optional[str] = None
     release_date: Optional[date] = None
-    image_url: Optional[HttpUrl] = None
+    image_url: Optional[str] = None
 
     requirements: List[RequirementResponse] = []
 
