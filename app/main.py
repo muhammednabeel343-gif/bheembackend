@@ -19,7 +19,9 @@ from fastapi.staticfiles import StaticFiles
 from app.config import settings
 import shutil, os, uuid
 
-BASE_DIR = Path(__file__).resolve().parents[3]
+# Safe path calculation: main.py is at backend/app/main.py
+# parent = backend/app, parent.parent = backend/ (the project root)
+BASE_DIR = Path(__file__).resolve().parent.parent
 UPLOAD_DIR = BASE_DIR / "uploads"
 UPLOAD_DIR.mkdir(exist_ok=True)
 

@@ -5,7 +5,9 @@ from pydantic import Field
 from pydantic_settings import BaseSettings
 
 
-_env_path = Path(__file__).resolve().parents[1] / ".env"
+# Safe .env path calculation: config.py is at backend/app/config.py
+# parent = backend/app, parent.parent = backend/
+_env_path = Path(__file__).resolve().parent.parent / ".env"
 load_dotenv(dotenv_path=_env_path, override=True)
 
 
