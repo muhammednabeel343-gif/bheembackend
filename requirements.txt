@@ -13,3 +13,4 @@ psycopg[binary]==3.3.4
 python-dotenv==1.0.1
 psutil==6.1.0
 py-cpuinfo==9.0.0
+cloudinary==1.41.0

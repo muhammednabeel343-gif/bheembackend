@@ -21,6 +21,11 @@ class Settings(BaseSettings):
     api_base_url: Optional[str] = Field(None, env="API_BASE_URL")
     # Optional: CORS origins, will use api_base_url as fallback if not set
     cors_origins: Optional[str] = Field(None, env="CORS_ORIGINS")
+    
+    # Cloudinary configuration for image storage
+    cloudinary_cloud_name: Optional[str] = Field(None, env="CLOUDINARY_CLOUD_NAME")
+    cloudinary_api_key: Optional[str] = Field(None, env="CLOUDINARY_API_KEY")
+    cloudinary_api_secret: Optional[str] = Field(None, env="CLOUDINARY_API_SECRET")
 
     @property
     def cors_origins_list(self) -> List[str]:

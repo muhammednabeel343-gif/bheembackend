@@ -51,9 +51,27 @@ app.mount("/uploads", StaticFiles(directory=str(UPLOAD_DIR)), name="game-images"
 
 @app.post("/admin/upload-image")
 async def upload_image(file: UploadFile = File(...), token: str = ""):
+    from app.utils.cloudinary_service import upload_image as upload_to_cloudinary, initialize_cloudinary
+    
+    # Try uploading to Cloudinary first
+    cloudinary_initialized = initialize_cloudinary()
+    if cloudinary_initialized:
+        try:
+            file_content = await file.read()
+            image_url = upload_to_cloudinary(file_content, file.filename or "image.jpg")
+            if image_url:
+                return {"url": image_url}
+        except Exception as e:
+            print(f"Cloudinary upload failed: {e}. Falling back to local storage.")
+    
+    # Fallback to local storage if Cloudinary not configured or failed
     ext = os.path.splitext(file.filename)[1] or ".png"
     filename = f"{uuid.uuid4().hex}{ext}"
     file_location = UPLOAD_DIR / filename
+    
+    # Reset file pointer after reading for Cloudinary
+    await file.seek(0)
+    
     with open(file_location, "wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
     
@@ -61,7 +79,6 @@ async def upload_image(file: UploadFile = File(...), token: str = ""):
     if settings.api_base_url:
         api_url = f"{settings.api_base_url}/uploads/{filename}"
     else:
-        # Fallback to relative path (will use request host when frontend loads)
         api_url = f"/uploads/{filename}"
     
     return {"url": api_url}
@@ -70,6 +87,31 @@ async def upload_image(file: UploadFile = File(...), token: str = ""):
 @app.get("/")
 async def root():
     return {"message": "Welcome to Project Bheem API"}
+
+
+@app.get("/debug/config")
+async def debug_config():
+    """Debug endpoint to check configuration settings."""
+    return {
+        "app_name": settings.app_name,
+        "api_base_url": settings.api_base_url,
+        "cors_origins": settings.cors_origins,
+        "cors_origins_list": settings.cors_origins_list,
+        "upload_dir": str(UPLOAD_DIR),
+        "upload_dir_exists": UPLOAD_DIR.exists(),
+    }
+
+
+@app.get("/debug/test-image-url")
+async def debug_test_image_url(url: str):
+    """Debug endpoint to test image URL normalization."""
+    from app.utils.image_url import normalize_image_url
+    
+    return {
+        "input": url,
+        "normalized": normalize_image_url(url),
+        "api_base_url": settings.api_base_url,
+    }
 
 
 @contextmanager

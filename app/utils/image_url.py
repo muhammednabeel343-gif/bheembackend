@@ -12,11 +12,13 @@ def normalize_image_url(image_url: str | None) -> str | None:
     
     Handles:
     - Hardcoded localhost URLs (http://127.0.0.1:8000)
-    - Old development URLs
-    - Already correct URLs
+    - Old development URLs (http://localhost:8000)
+    - Relative paths (/uploads/filename.jpg)
+    - Just filenames (filename.jpg)
+    - Any domain with /uploads/ path
     
     Args:
-        image_url: Image URL from database (may be hardcoded localhost)
+        image_url: Image URL from database (may be hardcoded localhost, relative, or full URL)
         
     Returns:
         Corrected URL using current API_BASE_URL, or None if no image
@@ -24,27 +26,35 @@ def normalize_image_url(image_url: str | None) -> str | None:
     if not image_url:
         return None
     
-    # Extract just the filename/path if it's a full URL
-    if image_url.startswith("http://") or image_url.startswith("https://"):
+    # If it's already a relative path, just return it as-is
+    if image_url.startswith("/uploads/"):
+        filename = image_url.replace("/uploads/", "", 1)
+    # If it's a full URL, extract the filename
+    elif image_url.startswith("http://") or image_url.startswith("https://"):
         try:
             parsed = urlparse(image_url)
-            # Extract path after /uploads/
-            path_parts = parsed.path.split("/uploads/")
-            if len(path_parts) > 1:
-                filename = path_parts[1]
+            # Extract filename from path
+            if "/uploads/" in parsed.path:
+                filename = parsed.path.split("/uploads/", 1)[1]
             else:
-                # Fallback to path as-is
-                filename = parsed.path.lstrip("/")
+                # Path doesn't have /uploads/, use the last segment
+                filename = parsed.path.split("/")[-1]
         except Exception:
-            # If parsing fails, return original
-            return image_url
+            # If parsing fails, treat as relative
+            filename = image_url.lstrip("/")
     else:
-        # Already relative path
-        filename = image_url.lstrip("/")
+        # Just a filename
+        filename = image_url
     
-    # Reconstruct with current API_BASE_URL
-    if settings.api_base_url:
-        return f"{settings.api_base_url}/uploads/{filename}"
+    # Ensure filename is clean (no empty strings)
+    if not filename:
+        return None
+    
+    # Get the base URL, removing any trailing slashes
+    base_url = settings.api_base_url
+    if base_url:
+        base_url = base_url.rstrip("/")
+        return f"{base_url}/uploads/{filename}"
     else:
         # Fallback: return relative path
         return f"/uploads/{filename}"
