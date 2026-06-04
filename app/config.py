@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 from pathlib import Path
 from dotenv import load_dotenv
 from pydantic import Field
@@ -17,13 +17,22 @@ class Settings(BaseSettings):
     secret_key: str = Field("your-secret-key-change-this-in-production", env="SECRET_KEY")
     algorithm: str = "HS256"
     access_token_expire_minutes: int = 30
-    api_base_url: str = Field(..., env="API_BASE_URL")
-    cors_origins: str = Field(None, env="CORS_ORIGINS")
+    # Optional: API_BASE_URL can be set in environment, or derived from request at runtime
+    api_base_url: Optional[str] = Field(None, env="API_BASE_URL")
+    # Optional: CORS origins, will use api_base_url as fallback if not set
+    cors_origins: Optional[str] = Field(None, env="CORS_ORIGINS")
 
     @property
     def cors_origins_list(self) -> List[str]:
-        # Use API_BASE_URL as fallback if CORS_ORIGINS not set
-        value = (self.cors_origins or self.api_base_url).strip()
+        # Use CORS_ORIGINS if set, otherwise use API_BASE_URL, or default to localhost
+        if self.cors_origins:
+            value = self.cors_origins.strip()
+        elif self.api_base_url:
+            value = self.api_base_url.strip()
+        else:
+            # Default for local development
+            value = "http://localhost:5173"
+        
         if value.startswith("[") and value.endswith("]"):
             import json
             return json.loads(value)
