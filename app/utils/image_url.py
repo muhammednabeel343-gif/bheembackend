@@ -5,6 +5,12 @@ Rewrites hardcoded localhost URLs to current deployment URL.
 from urllib.parse import urlparse
 from app.config import settings
 
+# NOTE: This module may be used without request context.
+# If API_BASE_URL is not configured, we fall back to returning an absolute URL
+# based on the current origin (best-effort in browser/relative usage) OR
+# a relative path as the last resort.
+
+
 
 def normalize_image_url(image_url: str | None) -> str | None:
     """
@@ -55,6 +61,8 @@ def normalize_image_url(image_url: str | None) -> str | None:
     if base_url:
         base_url = base_url.rstrip("/")
         return f"{base_url}/uploads/{filename}"
-    else:
-        # Fallback: return relative path
-        return f"/uploads/{filename}"
+
+    # Fallback when API_BASE_URL is missing:
+    # Keep the /uploads/* prefix so the frontend can prefix it with VITE_API_BASE_URL
+    # (or serve relative to the current origin).
+    return f"/uploads/{filename}"
