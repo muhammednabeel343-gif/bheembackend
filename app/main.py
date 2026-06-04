@@ -56,7 +56,7 @@ async def upload_image(file: UploadFile = File(...), token: str = ""):
     file_location = UPLOAD_DIR / filename
     with open(file_location, "wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
-    api_url = f"{settings.api_base_url or 'http://127.0.0.1:8000'}/uploads/{filename}"
+    api_url = f"{settings.api_base_url}/uploads/{filename}"
     return {"url": api_url}
 
 
