@@ -59,11 +59,15 @@ async def upload_image(file: UploadFile = File(...), token: str = ""):
         try:
             file_content = await file.read()
             image_url = upload_to_cloudinary(file_content, file.filename or "image.jpg")
+
+            print("CLOUDINARY RESULT:", image_url)
+
             if image_url:
                 return {"url": image_url}
+
+            print("Cloudinary returned None, using local storage")
         except Exception as e:
-            print(f"Cloudinary upload failed: {e}. Falling back to local storage.")
-    
+            print("CLOUDINARY EXCEPTION:", str(e))
     # Fallback to local storage if Cloudinary not configured or failed
     ext = os.path.splitext(file.filename)[1] or ".png"
     filename = f"{uuid.uuid4().hex}{ext}"
