@@ -112,6 +112,15 @@ async def debug_test_image_url(url: str):
         "normalized": normalize_image_url(url),
         "api_base_url": settings.api_base_url,
     }
+@app.get("/debug/cloudinary")
+async def debug_cloudinary():
+    from app.config import settings
+
+    return {
+        "cloud_name": settings.cloudinary_cloud_name,
+        "api_key_exists": bool(settings.cloudinary_api_key),
+        "api_secret_exists": bool(settings.cloudinary_api_secret),
+    }
 
 
 @contextmanager
