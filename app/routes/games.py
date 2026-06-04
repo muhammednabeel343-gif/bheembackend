@@ -8,6 +8,7 @@ from app.services.compatibility_service import build_game_compatibility
 from app.database import get_db
 from app.authentication.jwt import get_current_user
 from app.models.user import User
+from app.utils.image_url import normalize_image_url
 
 router = APIRouter(prefix="/games", tags=["games"])
 
@@ -28,7 +29,7 @@ async def read_games(
             id=game.id,
             name=game.title,
             genre=game.genre or "",
-            image_url=game.thumbnail_url,
+            image_url=normalize_image_url(game.thumbnail_url),
             is_favorite=favorite_map.get(game.id, False),
         )
         for game in games
@@ -49,7 +50,7 @@ async def read_game(game_id: int, current_user: User = Depends(get_current_user)
         genre=game.genre,
         publisher=game.publisher,
         release_date=game.release_date,
-        image_url=game.thumbnail_url,
+        image_url=normalize_image_url(game.thumbnail_url),
         requirements=game.requirements,
         is_favorite=favorite_map.get(game.id, False),
     )

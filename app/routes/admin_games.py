@@ -11,6 +11,7 @@ from app.schemas.game_admin import GameCreate, GameUpdate, GameResponse
 from app.services.game_service import list_games, get_game_by_id, load_favorite_map
 from app.authentication.admin_jwt import get_current_admin
 from app.models.user import User
+from app.utils.image_url import normalize_image_url
 
 router = APIRouter(prefix="/admin/games", tags=["Game Management"])
 
@@ -34,7 +35,7 @@ def get_games(
                 genre=g.genre or "",
                 publisher=g.publisher,
                 release_date=g.release_date.isoformat() if g.release_date else None,
-                image_url=g.thumbnail_url,
+                image_url=normalize_image_url(g.thumbnail_url),
                 cpu=req.cpu if req else None,
                 gpu=req.gpu if req else None,
                 ram_gb=req.ram_gb if req else None,
@@ -61,7 +62,7 @@ def get_game(game_id: int, current_user: User = Depends(get_current_admin), db: 
         "genre": game.genre,
         "publisher": game.publisher,
         "release_date": game.release_date.isoformat() if game.release_date else None,
-        "image_url": game.thumbnail_url,
+        "image_url": normalize_image_url(game.thumbnail_url),
         "cpu": req.cpu if req else None,
         "gpu": req.gpu if req else None,
         "ram_gb": req.ram_gb if req else None,

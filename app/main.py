@@ -56,7 +56,14 @@ async def upload_image(file: UploadFile = File(...), token: str = ""):
     file_location = UPLOAD_DIR / filename
     with open(file_location, "wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
-    api_url = f"{settings.api_base_url}/uploads/{filename}"
+    
+    # Construct URL using API_BASE_URL if available, fallback to relative path
+    if settings.api_base_url:
+        api_url = f"{settings.api_base_url}/uploads/{filename}"
+    else:
+        # Fallback to relative path (will use request host when frontend loads)
+        api_url = f"/uploads/{filename}"
+    
     return {"url": api_url}
 
 
