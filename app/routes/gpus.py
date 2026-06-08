@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models.gpu import GPU
 from app.authentication.admin_jwt import get_current_admin
+from app.utils.activity_logger import log_activity
 
 router = APIRouter(
     prefix="/admin/gpus",
@@ -48,6 +49,16 @@ def create_gpu(
     db.commit()
     db.refresh(new_gpu)
 
+    # Log activity
+    log_activity(
+        db,
+        entity_type="gpu",
+        entity_id=new_gpu.id,
+        entity_name=new_gpu.name,
+        action="created",
+        description=f"GPU '{new_gpu.name}' added to hardware library"
+    )
+
     return new_gpu
 
 
@@ -68,6 +79,17 @@ def update_gpu(
     existing.name = gpu.name
     db.commit()
     db.refresh(existing)
+
+    # Log activity
+    log_activity(
+        db,
+        entity_type="gpu",
+        entity_id=existing.id,
+        entity_name=existing.name,
+        action="updated",
+        description=f"GPU '{existing.name}' updated"
+    )
+
     return existing
 
 
@@ -76,6 +98,19 @@ def delete_gpu(gpu_id: int, db: Session = Depends(get_db)):
     gpu = db.query(GPU).filter(GPU.id == gpu_id).first()
     if not gpu:
         raise HTTPException(status_code=404, detail="GPU not found")
+    
+    gpu_name = gpu.name
     db.delete(gpu)
     db.commit()
+
+    # Log activity
+    log_activity(
+        db,
+        entity_type="gpu",
+        entity_id=gpu_id,
+        entity_name=gpu_name,
+        action="deleted",
+        description=f"GPU '{gpu_name}' deleted"
+    )
+
     return {"message": "GPU deleted"}

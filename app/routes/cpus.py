@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models.cpu import CPU
 from app.authentication.admin_jwt import get_current_admin
+from app.utils.activity_logger import log_activity
 
 router = APIRouter(
     prefix="/admin/cpus",
@@ -48,6 +49,16 @@ def create_cpu(
     db.commit()
     db.refresh(new_cpu)
 
+    # Log activity
+    log_activity(
+        db,
+        entity_type="cpu",
+        entity_id=new_cpu.id,
+        entity_name=new_cpu.name,
+        action="created",
+        description=f"CPU '{new_cpu.name}' added to hardware library"
+    )
+
     return new_cpu
 
 
@@ -68,6 +79,17 @@ def update_cpu(
     existing.name = cpu.name
     db.commit()
     db.refresh(existing)
+
+    # Log activity
+    log_activity(
+        db,
+        entity_type="cpu",
+        entity_id=existing.id,
+        entity_name=existing.name,
+        action="updated",
+        description=f"CPU '{existing.name}' updated"
+    )
+
     return existing
 
 
@@ -76,6 +98,19 @@ def delete_cpu(cpu_id: int, db: Session = Depends(get_db)):
     cpu = db.query(CPU).filter(CPU.id == cpu_id).first()
     if not cpu:
         raise HTTPException(status_code=404, detail="CPU not found")
+    
+    cpu_name = cpu.name
     db.delete(cpu)
     db.commit()
+
+    # Log activity
+    log_activity(
+        db,
+        entity_type="cpu",
+        entity_id=cpu_id,
+        entity_name=cpu_name,
+        action="deleted",
+        description=f"CPU '{cpu_name}' deleted"
+    )
+
     return {"message": "CPU deleted"}

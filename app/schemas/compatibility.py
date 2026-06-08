@@ -65,3 +65,4 @@ class SimulatorRequest(BaseModel):
     gpu: str
     ram_gb: int
     storage_gb: int
+    operating_system: str = "Windows"

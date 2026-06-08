@@ -8,3 +8,4 @@ from app.models import cpu
 from app.models import gpu
 from app.models import ram
 from app.models import storage
+from app.models import activity

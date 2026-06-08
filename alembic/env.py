@@ -21,6 +21,7 @@ from app.models import cpu  # noqa: F401
 from app.models import gpu  # noqa: F401
 from app.models import ram  # noqa: F401
 from app.models import storage  # noqa: F401
+from app.models import activity  # noqa: F401
 
 config = context.config
 if config.config_file_name is not None:

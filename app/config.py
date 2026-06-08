@@ -29,14 +29,14 @@ class Settings(BaseSettings):
 
     @property
     def cors_origins_list(self) -> List[str]:
-        # Use CORS_ORIGINS if set, otherwise use API_BASE_URL, or default to localhost
+        # Use CORS_ORIGINS if set, otherwise use API_BASE_URL, or default to localhost origins
         if self.cors_origins:
             value = self.cors_origins.strip()
         elif self.api_base_url:
             value = self.api_base_url.strip()
         else:
-            # Default for local development
-            value = "http://localhost:5173"
+            # Default for local development - allow multiple origins
+            value = "http://localhost:5173,http://localhost:3000,http://127.0.0.1:5173"
         
         if value.startswith("[") and value.endswith("]"):
             import json

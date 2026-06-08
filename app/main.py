@@ -11,6 +11,7 @@ from app.routes.cpus import router as cpu_router
 from app.routes.gpus import router as gpu_router
 from app.routes.rams import router as ram_router
 from app.routes.storages import router as storage_router
+from app.routes.os import router as os_router
 from app.data.seed import seed_sample_games
 from contextlib import contextmanager
 from fastapi import FastAPI, UploadFile, File, HTTPException
@@ -27,6 +28,15 @@ UPLOAD_DIR.mkdir(exist_ok=True)
 
 app = FastAPI(title=settings.app_name, version="1.0.0")
 
+# Add CORS middleware FIRST, before routers
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=settings.cors_origins_list,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 app.include_router(auth_router)
 app.include_router(games_router)
 app.include_router(admin_auth_router)
@@ -38,14 +48,7 @@ app.include_router(cpu_router)
 app.include_router(gpu_router)
 app.include_router(ram_router)
 app.include_router(storage_router)
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=settings.cors_origins_list,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+app.include_router(os_router)
 
 app.mount("/uploads", StaticFiles(directory=str(UPLOAD_DIR)), name="game-images")
 

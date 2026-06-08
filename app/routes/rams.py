@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models.ram import RAM
 from app.authentication.admin_jwt import get_current_admin
+from app.utils.activity_logger import log_activity
 
 router = APIRouter(
     prefix="/admin/rams",
@@ -48,6 +49,16 @@ def create_ram(
     db.commit()
     db.refresh(new_ram)
 
+    # Log activity
+    log_activity(
+        db,
+        entity_type="ram",
+        entity_id=new_ram.id,
+        entity_name=f"{new_ram.size}GB",
+        action="created",
+        description=f"RAM {new_ram.size}GB added to hardware library"
+    )
+
     return new_ram
 
 
@@ -68,6 +79,17 @@ def update_ram(
     existing.size = ram.size
     db.commit()
     db.refresh(existing)
+
+    # Log activity
+    log_activity(
+        db,
+        entity_type="ram",
+        entity_id=existing.id,
+        entity_name=f"{existing.size}GB",
+        action="updated",
+        description=f"RAM {existing.size}GB updated"
+    )
+
     return existing
 
 
@@ -76,6 +98,19 @@ def delete_ram(ram_id: int, db: Session = Depends(get_db)):
     ram = db.query(RAM).filter(RAM.id == ram_id).first()
     if not ram:
         raise HTTPException(status_code=404, detail="RAM not found")
+    
+    ram_size = ram.size
     db.delete(ram)
     db.commit()
+
+    # Log activity
+    log_activity(
+        db,
+        entity_type="ram",
+        entity_id=ram_id,
+        entity_name=f"{ram_size}GB",
+        action="deleted",
+        description=f"RAM {ram_size}GB deleted"
+    )
+
     return {"message": "RAM deleted"}

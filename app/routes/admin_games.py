@@ -12,6 +12,7 @@ from app.services.game_service import list_games, get_game_by_id, load_favorite_
 from app.authentication.admin_jwt import get_current_admin
 from app.models.user import User
 from app.utils.image_url import normalize_image_url
+from app.utils.activity_logger import log_activity
 
 router = APIRouter(prefix="/admin/games", tags=["Game Management"])
 
@@ -100,6 +101,16 @@ def create_game(payload: GameCreate, current_user: User = Depends(get_current_ad
     db.commit()
     db.refresh(req)
 
+    # Log activity
+    log_activity(
+        db,
+        entity_type="game",
+        entity_id=game.id,
+        entity_name=game.name,
+        action="created",
+        description=f"Game '{game.name}' added with genre '{game.genre}'"
+    )
+
     return {
         "id": game.id,
         "name": game.name,
@@ -157,6 +168,16 @@ def update_game(game_id: int, payload: GameUpdate, current_user: User = Depends(
     db.refresh(game)
     db.refresh(req)
 
+    # Log activity
+    log_activity(
+        db,
+        entity_type="game",
+        entity_id=game.id,
+        entity_name=game.name,
+        action="updated",
+        description=f"Game '{game.name}' updated"
+    )
+
     return {
         "id": game.id,
         "name": game.name,
@@ -179,6 +200,18 @@ def delete_game(game_id: int, current_user: User = Depends(get_current_admin), d
     if not game:
         raise HTTPException(status_code=404, detail="Game not found")
 
+    game_name = game.name
     db.delete(game)
     db.commit()
+
+    # Log activity
+    log_activity(
+        db,
+        entity_type="game",
+        entity_id=game_id,
+        entity_name=game_name,
+        action="deleted",
+        description=f"Game '{game_name}' deleted"
+    )
+
     return {"message": "Game deleted"}
