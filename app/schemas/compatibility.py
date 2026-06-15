@@ -1,5 +1,5 @@
 from typing import Optional
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 
 class SystemScanResponse(BaseModel):
@@ -9,8 +9,7 @@ class SystemScanResponse(BaseModel):
     storage_gb: int
     operating_system: Optional[str] = None
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class SaveSystemScanRequest(BaseModel):
@@ -29,8 +28,7 @@ class UserSpecsResponse(BaseModel):
     storage_gb: int
     operating_system: Optional[str] = None
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class CompatibilityCheckResponse(BaseModel):
@@ -47,6 +45,20 @@ class FpsEstimateResponse(BaseModel):
     ultra: int
 
 
+class AIInsightsResponse(BaseModel):
+    gpu_analysis: Optional[str] = None
+    cpu_analysis: Optional[str] = None
+    ram_analysis: Optional[str] = None
+    storage_analysis: Optional[str] = None
+    os_analysis: Optional[str] = None
+    expected_experience: Optional[str] = None
+    recommended_settings: list = []
+    tips: list = []
+    warnings: list = []
+
+    model_config = ConfigDict(from_attributes=True)
+
+
 class CompatibilityResponse(BaseModel):
     minimum_requirements: dict
     user_specs: UserSpecsResponse
@@ -54,9 +66,9 @@ class CompatibilityResponse(BaseModel):
     compatibility_percentage: int
     status: str
     estimated_fps: FpsEstimateResponse
+    ai_insights: Optional[AIInsightsResponse] = None
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class SimulatorRequest(BaseModel):

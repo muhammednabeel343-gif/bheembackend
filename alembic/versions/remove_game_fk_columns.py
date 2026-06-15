@@ -18,18 +18,20 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    op.drop_constraint('fk_games_cpu', 'games', type_='foreignkey')
-    op.drop_constraint('fk_games_gpu', 'games', type_='foreignkey')
-    op.drop_constraint('fk_games_ram', 'games', type_='foreignkey')
-    op.drop_column('games', 'cpu_id')
-    op.drop_column('games', 'gpu_id')
-    op.drop_column('games', 'ram_id')
+    with op.batch_alter_table('games', recreate='always') as batch_op:
+        batch_op.drop_constraint('fk_games_cpu', type_='foreignkey')
+        batch_op.drop_constraint('fk_games_gpu', type_='foreignkey')
+        batch_op.drop_constraint('fk_games_ram', type_='foreignkey')
+        batch_op.drop_column('cpu_id')
+        batch_op.drop_column('gpu_id')
+        batch_op.drop_column('ram_id')
 
 
 def downgrade() -> None:
-    op.add_column('games', sa.Column('cpu_id', sa.Integer(), nullable=True))
-    op.add_column('games', sa.Column('gpu_id', sa.Integer(), nullable=True))
-    op.add_column('games', sa.Column('ram_id', sa.Integer(), nullable=True))
-    op.create_foreign_key('fk_games_cpu', 'games', 'cpus', ['cpu_id'], ['id'])
-    op.create_foreign_key('fk_games_gpu', 'games', 'gpus', ['gpu_id'], ['id'])
-    op.create_foreign_key('fk_games_ram', 'games', 'rams', ['ram_id'], ['id'])
+    with op.batch_alter_table('games', recreate='always') as batch_op:
+        batch_op.add_column(sa.Column('cpu_id', sa.Integer(), nullable=True))
+        batch_op.add_column(sa.Column('gpu_id', sa.Integer(), nullable=True))
+        batch_op.add_column(sa.Column('ram_id', sa.Integer(), nullable=True))
+        batch_op.create_foreign_key('fk_games_cpu', 'cpus', ['cpu_id'], ['id'])
+        batch_op.create_foreign_key('fk_games_gpu', 'gpus', ['gpu_id'], ['id'])
+        batch_op.create_foreign_key('fk_games_ram', 'rams', ['ram_id'], ['id'])

@@ -32,9 +32,6 @@ def upgrade() -> None:
         sa.UniqueConstraint("size"),
     )
 
-    op.create_index("ix_storages_id", "storages", ["id"], unique=False)
-
 
 def downgrade() -> None:
-    op.drop_index("ix_storages_id", table_name="storages")
     op.drop_table("storages")

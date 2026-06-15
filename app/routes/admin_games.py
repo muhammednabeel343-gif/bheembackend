@@ -83,6 +83,7 @@ def create_game(payload: GameCreate, current_user: User = Depends(get_current_ad
         publisher=payload.publisher,
         release_date=payload.release_date,
         image_url=payload.image_url,
+        price=payload.price,
     )
     db.add(game)
     db.commit()
@@ -118,6 +119,7 @@ def create_game(payload: GameCreate, current_user: User = Depends(get_current_ad
         "publisher": game.publisher,
         "release_date": game.release_date,
         "image_url": game.image_url,
+        "price": game.price,
         "cpu": req.cpu,
         "gpu": req.gpu,
         "ram_gb": req.ram_gb,
@@ -145,6 +147,8 @@ def update_game(game_id: int, payload: GameUpdate, current_user: User = Depends(
         game.release_date = payload.release_date
     if payload.image_url is not None:
         game.image_url = payload.image_url
+    if payload.price is not None:
+        game.price = payload.price
 
     req = db.query(Requirement).filter(Requirement.game_id == game_id).first()
     if not req:
@@ -185,6 +189,7 @@ def update_game(game_id: int, payload: GameUpdate, current_user: User = Depends(
         "publisher": game.publisher,
         "release_date": game.release_date,
         "image_url": game.image_url,
+        "price": game.price,
         "cpu": req.cpu,
         "gpu": req.gpu,
         "ram_gb": req.ram_gb,

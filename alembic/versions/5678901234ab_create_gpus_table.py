@@ -32,9 +32,8 @@ def upgrade() -> None:
         sa.UniqueConstraint("name"),
     )
 
-    op.create_index("ix_gpus_id", "gpus", ["id"], unique=False)
+    # No index on primary key 'id' needed; removed to avoid duplicate index on SQLite
 
 
 def downgrade() -> None:
-    op.drop_index("ix_gpus_id", table_name="gpus")
     op.drop_table("gpus")

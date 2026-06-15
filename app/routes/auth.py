@@ -11,9 +11,7 @@ from app.authentication.jwt import (
 )
 from app.database import get_db
 from app.models.user import User
-from app.models.admin import Admin
 from app.config import settings
-from app.schemas.admin import AdminResponse
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -48,34 +46,11 @@ async def register(user: UserCreate, db: Session = Depends(get_db)):
 async def login(credentials: LoginRequest, db: Session = Depends(get_db)):
     user = authenticate_user(db, credentials.email, credentials.password)
     if not user:
-        admin = db.query(Admin).filter(Admin.email == credentials.email).first()
-        if admin:
-            from app.authentication.jwt import verify_password
-            if verify_password(credentials.password, admin.hashed_password):
-                access_token = create_access_token(
-                    data={"sub": admin.email, "role": "admin"},
-                    expires_delta=timedelta(minutes=settings.access_token_expire_minutes)
-                )
-                return {
-                    "access_token": access_token,
-                    "token_type": "bearer",
-                    "role": "admin",
-                    "admin": {
-                        "id": admin.id,
-                        "username": admin.username,
-                        "email": admin.email
-                    }
-                }
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect email or password",
             headers={"WWW-Authenticate": "Bearer"},
         )
-
-    user.last_login_at = datetime.utcnow()
-    db.add(user)
-    db.commit()
-    db.refresh(user)
 
     access_token_expires = timedelta(minutes=settings.access_token_expire_minutes)
     access_token = create_access_token(data={"sub": user.email}, expires_delta=access_token_expires)

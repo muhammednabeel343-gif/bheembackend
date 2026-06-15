@@ -1,5 +1,5 @@
 from typing import List
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 
 class FavoriteCreate(BaseModel):
@@ -13,8 +13,7 @@ class FavoriteItem(BaseModel):
     genre: str | None = None
     image_url: str | None = None
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class FavoriteListResponse(BaseModel):

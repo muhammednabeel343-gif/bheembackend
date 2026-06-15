@@ -9,3 +9,8 @@ from app.models import gpu
 from app.models import ram
 from app.models import storage
 from app.models import activity
+from app.models import chat
+from app.models import cart
+from app.models import order
+from app.models import purchase
+from app.models import community

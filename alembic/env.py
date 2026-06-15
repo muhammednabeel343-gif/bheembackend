@@ -22,6 +22,7 @@ from app.models import gpu  # noqa: F401
 from app.models import ram  # noqa: F401
 from app.models import storage  # noqa: F401
 from app.models import activity  # noqa: F401
+from app.models import chat  # noqa: F401
 
 config = context.config
 if config.config_file_name is not None:
@@ -29,7 +30,9 @@ if config.config_file_name is not None:
 
 target_metadata = Base.metadata
 
-config.set_main_option("sqlalchemy.url", settings.database_url)
+import os
+# Prefer DATABASE_URL from the process environment if present (helps test runs)
+config.set_main_option("sqlalchemy.url", os.environ.get('DATABASE_URL', settings.database_url))
 
 # other values from the config, defined by the needs of env.py,
 # can be acquired:

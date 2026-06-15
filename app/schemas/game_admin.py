@@ -1,6 +1,6 @@
 from datetime import date
 from typing import Optional, Any
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 
 class GameBase(BaseModel):
@@ -10,6 +10,7 @@ class GameBase(BaseModel):
     release_date: Optional[str] = None
     image_url: Optional[str] = None
     publisher: Optional[str] = None
+    price: Optional[float] = None
 
 
 class GameCreate(GameBase):
@@ -28,6 +29,7 @@ class GameUpdate(BaseModel):
     release_date: Optional[str] = None
     image_url: Optional[str] = None
     publisher: Optional[str] = None
+    price: Optional[float] = None
     cpu: Optional[str] = None
     gpu: Optional[str] = None
     ram_gb: Optional[int] = None
@@ -43,15 +45,16 @@ class GameResponse(BaseModel):
     publisher: Optional[str] = None
     release_date: Optional[str] = None
     image_url: Optional[str] = None
+    price: Optional[float] = None
     cpu: Optional[str] = None
     gpu: Optional[str] = None
     ram_gb: Optional[int] = None
     directx: Optional[str] = None
     operating_system: Optional[str] = None
     storage: Optional[int] = None
+    description: Optional[str] = None
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class GameListResponse(BaseModel):

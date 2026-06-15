@@ -1,7 +1,7 @@
 from datetime import date
 from typing import List, Optional
 
-from pydantic import BaseModel, HttpUrl
+from pydantic import BaseModel, HttpUrl, ConfigDict
 
 
 class RequirementResponse(BaseModel):
@@ -13,8 +13,7 @@ class RequirementResponse(BaseModel):
     directx: Optional[str] = None
     operating_system: Optional[str] = None
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class GameListItem(BaseModel):
@@ -24,14 +23,15 @@ class GameListItem(BaseModel):
     image_url: Optional[str] = None
     is_favorite: bool = False
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class GameDetail(BaseModel):
     id: int
     name: str
     genre: str
+    description: Optional[str] = None
+    price: Optional[float] = None
     publisher: Optional[str] = None
     release_date: Optional[date] = None
     image_url: Optional[str] = None
@@ -40,8 +40,7 @@ class GameDetail(BaseModel):
 
     is_favorite: bool = False
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class GameListResponse(BaseModel):

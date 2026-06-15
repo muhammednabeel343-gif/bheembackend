@@ -18,7 +18,7 @@ async def read_games(
     search: Optional[str] = Query(None, description="Search game titles"),
     category: Optional[str] = Query(None, description="Filter by category"),
     page: int = Query(1, ge=1),
-    limit: int = Query(20, ge=1, le=100),
+    limit: int = Query(20, ge=1, le=1000),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
@@ -47,6 +47,8 @@ async def read_game(game_id: int, current_user: User = Depends(get_current_user)
     return GameDetail(
         id=game.id,
         name=game.title,
+        description=game.description,
+        price=game.price,
         genre=game.genre,
         publisher=game.publisher,
         release_date=game.release_date,

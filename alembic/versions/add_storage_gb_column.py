@@ -18,12 +18,14 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    op.drop_constraint('fk_games_storage', 'games', type_='foreignkey')
-    op.drop_column('games', 'storage_id')
-    op.add_column('games', sa.Column('storage_gb', sa.Integer(), nullable=True))
+    with op.batch_alter_table('games', recreate='always') as batch_op:
+        batch_op.drop_constraint('fk_games_storage', type_='foreignkey')
+        batch_op.drop_column('storage_id')
+        batch_op.add_column(sa.Column('storage_gb', sa.Integer(), nullable=True))
 
 
 def downgrade() -> None:
-    op.drop_column('games', 'storage_gb')
-    op.add_column('games', sa.Column('storage_id', sa.Integer(), nullable=True))
-    op.create_foreign_key('fk_games_storage', 'games', 'storages', ['storage_id'], ['id'])
+    with op.batch_alter_table('games', recreate='always') as batch_op:
+        batch_op.drop_column('storage_gb')
+        batch_op.add_column(sa.Column('storage_id', sa.Integer(), nullable=True))
+        batch_op.create_foreign_key('fk_games_storage', 'storages', ['storage_id'], ['id'])

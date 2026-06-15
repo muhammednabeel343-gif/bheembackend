@@ -1,5 +1,5 @@
 ﻿from datetime import date
-from sqlalchemy import Column, Integer, String, Date, DateTime, ForeignKey, func
+from sqlalchemy import Column, Integer, String, Date, DateTime, ForeignKey, func, Float
 from sqlalchemy.orm import relationship
 from app.database import Base
 
@@ -15,6 +15,7 @@ class Game(Base):
     publisher = Column(String(255), nullable=True)
     release_date = Column(Date, nullable=True)
     image_url = Column(String(1000), nullable=True)
+    price = Column(Float, nullable=True, default=0.0)
 
     created_at = Column(DateTime(timezone=False), server_default=func.now())
 
@@ -26,6 +27,32 @@ class Game(Base):
 
     favorites = relationship(
         "Favorite",
+        back_populates="game",
+        cascade="all, delete-orphan"
+    )
+
+    # Cart and Purchase relationships
+    cart_items = relationship(
+        "CartItem",
+        back_populates="game",
+        cascade="all, delete-orphan"
+    )
+
+    order_items = relationship(
+        "OrderItem",
+        back_populates="game",
+        cascade="all, delete-orphan"
+    )
+
+    purchased_games = relationship(
+        "PurchasedGame",
+        back_populates="game",
+        cascade="all, delete-orphan"
+    )
+
+    # Community relationships
+    community_posts = relationship(
+        "CommunityPost",
         back_populates="game",
         cascade="all, delete-orphan"
     )

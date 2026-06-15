@@ -20,7 +20,7 @@ depends_on: Union[str, Sequence[str], None] = None
 def upgrade() -> None:
     op.create_table(
         'users',
-        sa.Column('id', sa.Integer, primary_key=True, index=True),
+        sa.Column('id', sa.Integer, primary_key=True),
         sa.Column('username', sa.String(50), nullable=False, unique=True),
         sa.Column('email', sa.String(100), nullable=False, unique=True),
         sa.Column('hashed_password', sa.String(255), nullable=False),
@@ -31,7 +31,7 @@ def upgrade() -> None:
 
     op.create_table(
         'games',
-        sa.Column('id', sa.Integer, primary_key=True, index=True),
+        sa.Column('id', sa.Integer, primary_key=True),
         sa.Column('name', sa.String(255), nullable=False),
         sa.Column('genre', sa.String(100)),
         sa.Column('publisher', sa.String(255)),
@@ -44,7 +44,7 @@ def upgrade() -> None:
 
     op.create_table(
         'requirements',
-        sa.Column('id', sa.Integer, primary_key=True, index=True),
+        sa.Column('id', sa.Integer, primary_key=True),
         sa.Column('game_id', sa.Integer, sa.ForeignKey('games.id'), nullable=False),
         sa.Column('cpu', sa.String(100)),
         sa.Column('gpu', sa.String(100)),
@@ -58,19 +58,18 @@ def upgrade() -> None:
 
     op.create_table(
         'favorites',
-        sa.Column('id', sa.Integer, primary_key=True, index=True),
+        sa.Column('id', sa.Integer, primary_key=True),
         sa.Column('user_id', sa.Integer, sa.ForeignKey('users.id'), nullable=False),
         sa.Column('game_id', sa.Integer, sa.ForeignKey('games.id'), nullable=False),
         sa.Column('created_at', sa.DateTime, server_default=sa.text('CURRENT_TIMESTAMP')),
+        sa.UniqueConstraint('user_id', 'game_id', name='unique_user_game'),
     )
-    op.create_index('ix_favorites_id', 'favorites', ['id'], unique=False)
-    op.create_unique_constraint('unique_user_game', 'favorites', ['user_id', 'game_id'])
     op.create_index('idx_favorites_user_id', 'favorites', ['user_id'], unique=False)
     op.create_index('idx_favorites_game_id', 'favorites', ['game_id'], unique=False)
 
     op.create_table(
         'user_scans',
-        sa.Column('id', sa.Integer, primary_key=True, index=True),
+        sa.Column('id', sa.Integer, primary_key=True),
         sa.Column('user_id', sa.Integer, sa.ForeignKey('users.id'), nullable=False),
         sa.Column('game_id', sa.Integer, sa.ForeignKey('games.id'), nullable=True),
         sa.Column('cpu', sa.String(255), nullable=False),

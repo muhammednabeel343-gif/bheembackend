@@ -55,7 +55,7 @@ def migrate():
     mysql_cursor.execute("SELECT id, username, email, password_hash, hashed_password, created_at FROM users")
     users.extend(mysql_cursor.fetchall())
 
-    mysql_cursor.execute("SELECT id, name, genre, publisher, release_date, image_url, created_at FROM games")
+    mysql_cursor.execute("SELECT id, name, genre, publisher, release_date, image_url, description, price, created_at FROM games")
     games = mysql_cursor.fetchall()
 
     mysql_cursor.execute("SELECT id, game_id, cpu, gpu, ram, storage, directx, os, created_at FROM requirements")
@@ -118,6 +118,8 @@ def migrate():
                     publisher VARCHAR(255),
                     release_date DATE,
                     image_url VARCHAR(1000),
+                    description TEXT,
+                    price FLOAT DEFAULT 0.0,
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 )
                 """
@@ -126,8 +128,8 @@ def migrate():
         for row in games:
             conn.execute(
                 text(
-                    "INSERT INTO games (id, name, genre, publisher, release_date, image_url, created_at) "
-                    "VALUES (:id, :name, :genre, :publisher, :release_date, :image_url, :created_at)"
+                    "INSERT INTO games (id, name, genre, publisher, release_date, image_url, description, price, created_at) "
+                    "VALUES (:id, :name, :genre, :publisher, :release_date, :image_url, :description, :price, :created_at)"
                 ),
                 {
                     "id": row["id"],
@@ -136,6 +138,8 @@ def migrate():
                     "publisher": row.get("publisher"),
                     "release_date": to_date(row.get("release_date")),
                     "image_url": row.get("image_url"),
+                    "description": row.get("description"),
+                    "price": float(row.get("price")) if row.get("price") is not None else None,
                     "created_at": to_date(row.get("created_at")),
                 },
             )

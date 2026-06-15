@@ -12,13 +12,23 @@ from app.routes.gpus import router as gpu_router
 from app.routes.rams import router as ram_router
 from app.routes.storages import router as storage_router
 from app.routes.os import router as os_router
+from app.routes.ai_features import router as ai_features_router
+from app.routes.chatbot import router as chatbot_router
+from app.routes.recommendations import router as recommendations_router
+from app.routes.chat import router as chat_router
+from app.routes.cart import router as cart_router
+from app.routes.orders import router as orders_router
+from app.routes.purchases import router as purchases_router
+from app.routes.community import router as community_router
 from app.data.seed import seed_sample_games
-from contextlib import contextmanager
+from contextlib import asynccontextmanager, contextmanager
 from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from app.config import settings
 import shutil, os, uuid
+import logging
+import asyncio
 
 # Safe path calculation: main.py is at backend/app/main.py
 # parent = backend/app, parent.parent = backend/ (the project root)
@@ -26,7 +36,55 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 UPLOAD_DIR = BASE_DIR / "uploads"
 UPLOAD_DIR.mkdir(exist_ok=True)
 
-app = FastAPI(title=settings.app_name, version="1.0.0")
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Lifespan handler: create any missing tables, then validate AI on startup."""
+    # Ensure chat tables (and any other new models) exist without requiring
+    # a manual migration step in development / first deploy.
+    try:
+        from app.models import chat as _chat_models  # noqa: F401 – registers models on Base
+        Base.metadata.create_all(bind=engine, checkfirst=True)
+    except Exception as e:
+        logging.warning("create_all failed (non-fatal): %s", e)
+
+    app.state.ai_validation = {"checked": False, "result": None}
+    
+    # AI validation with timeout to prevent startup hang
+    try:
+        if settings.ai_enabled and settings.ai_api_key:
+            try:
+                from app.services.google_ai_client import GoogleAIClient
+                client = GoogleAIClient(
+                    api_key=settings.ai_api_key,
+                    project_id=settings.google_project_id,
+                    enable=True,
+                    model=settings.gemini_model,
+                )
+                # Wrap in timeout to prevent indefinite hanging
+                result = await asyncio.wait_for(
+                    asyncio.to_thread(client.validate),
+                    timeout=5.0
+                )
+                app.state.ai_validation = {"checked": True, "result": result}
+                if not result.get("ok"):
+                    logging.warning("AI validation failed at startup: %s", result)
+                    if settings.ai_fail_fast:
+                        raise RuntimeError(f"AI validation failed: {result}")
+            except asyncio.TimeoutError:
+                logging.warning("AI validation timed out after 5 seconds - continuing without validation")
+                app.state.ai_validation = {"checked": True, "result": {"ok": False, "detail": "Validation timeout"}}
+        else:
+            app.state.ai_validation = {"checked": True, "result": {"ok": True, "mode": "disabled"}}
+    except Exception as e:
+        app.state.ai_validation = {"checked": True, "result": {"ok": False, "detail": str(e)}}
+        logging.exception("Exception during AI validation at startup")
+        if settings.ai_fail_fast:
+            raise
+
+    yield
+
+
+app = FastAPI(title=settings.app_name, version="1.0.0", lifespan=lifespan)
 
 # Add CORS middleware FIRST, before routers
 app.add_middleware(
@@ -49,6 +107,14 @@ app.include_router(gpu_router)
 app.include_router(ram_router)
 app.include_router(storage_router)
 app.include_router(os_router)
+app.include_router(ai_features_router)
+app.include_router(chatbot_router)
+app.include_router(recommendations_router)
+app.include_router(chat_router)
+app.include_router(cart_router)
+app.include_router(orders_router)
+app.include_router(purchases_router)
+app.include_router(community_router)
 
 app.mount("/uploads", StaticFiles(directory=str(UPLOAD_DIR)), name="game-images")
 

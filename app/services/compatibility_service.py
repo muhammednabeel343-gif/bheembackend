@@ -13,6 +13,8 @@ from app.data.cpu_benchmarks import CPU_BENCHMARKS
 from app.data.gpu_benchmarks import GPU_BENCHMARKS
 from app.data.os_benchmarks import OS_BENCHMARKS
 from app.services.game_service import get_game_by_id
+from app.services.ai_explanation_service import AIExplanationService
+from app.config import settings
 
 def get_all_cpus(db: Session) -> List[CPU]:
     return db.query(CPU).all()
@@ -294,5 +296,44 @@ def build_game_compatibility(db: Session, user_id: int, game_id: int) -> dict:
         raise ValueError("Game requirements not found")
 
     report = compute_compatibility_report(requirement, scan)
+    
+    # Call AI service to generate detailed insights
+    ai_insights = None
+    if settings.ai_enabled:
+        try:
+            print(f"[AI] Starting AI explanation for {game.title}")
+            ai_service = AIExplanationService()
+            print(f"[AI] AI Service initialized")
+            
+            ai_response = ai_service.explain_compatibility(
+                game_name=game.title,
+                game_requirements={
+                    "gpu": requirement.gpu,
+                    "cpu": requirement.cpu,
+                    "ram": requirement.ram_gb,
+                    "storage": requirement.storage_gb,
+                    "os": requirement.operating_system
+                },
+                user_system={
+                    "gpu": scan.gpu,
+                    "cpu": scan.cpu,
+                    "ram": scan.ram_gb,
+                    "storage": scan.storage_gb,
+                    "os": scan.operating_system
+                },
+                compatibility_score=report["compatibility_percentage"] / 100.0
+            )
+            print(f"[AI] Response: {ai_response}")
+            ai_insights = ai_response
+        except Exception as e:
+            import traceback
+            print(f"[AI] ERROR: {e}")
+            print(traceback.format_exc())
+            ai_insights = None
+    else:
+        print(f"[AI] AI features disabled")
+    
+    report["ai_insights"] = ai_insights
+    
     create_game_compatibility_record(db, user_id, game, scan, report)
     return report
