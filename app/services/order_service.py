@@ -6,7 +6,7 @@ from app.models.game import Game
 from typing import List, Optional
 from app.models.user import User
 
-N8N_WEBHOOK_URL = "https://nabx-777xx.app.n8n.cloud/webhook-test/38c6df7a-ba14-4bc1-8d54-27d3c085fffd"
+N8N_WEBHOOK_URL = "https://nabx-777xx.app.n8n.cloud/webhook-test/2169d8cf-4e2e-4544-9e2a-07cc073ae2c6"
 
 
 async def _send_purchase_webhook(user: User, order: Order, games: List[dict]) -> None:
