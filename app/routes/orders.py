@@ -148,7 +148,7 @@ async def simulate_payment(
     
     if request.success:
         # Mark order as completed and create purchased games
-        order = OrderService.complete_order(db, order_id)
+        order = await OrderService.async_complete_order(db, order_id, current_user)
         # Clear cart after successful purchase
         CartService.clear_cart(db, current_user.id)
         
@@ -170,7 +170,7 @@ async def simulate_payment(
 
 
 @router.post("/{order_id}/complete")
-async def complete_order(
+async def complete_order_endpoint(
     order_id: int,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
@@ -180,7 +180,7 @@ async def complete_order(
     if not order:
         raise HTTPException(status_code=404, detail="Order not found")
     
-    order = OrderService.complete_order(db, order_id)
+    order = await OrderService.async_complete_order(db, order_id, current_user)
     CartService.clear_cart(db, current_user.id)
     
     return {

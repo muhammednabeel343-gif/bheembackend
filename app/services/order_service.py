@@ -1,10 +1,31 @@
+import httpx
 from sqlalchemy.orm import Session
 from app.models.order import Order, OrderItem, OrderStatus
-from app.models.purchase import PurchasedGame
 from app.services.purchase_service import PurchaseService
 from app.models.game import Game
 from typing import List, Optional
-from datetime import datetime
+from app.models.user import User
+
+N8N_WEBHOOK_URL = "https://nabx-777xx.app.n8n.cloud/webhook-test/38c6df7a-ba14-4bc1-8d54-27d3c085fffd"
+
+
+async def _send_purchase_webhook(user: User, order: Order, games: List[dict]) -> None:
+    """Send webhook notification to n8n for purchase confirmation email."""
+    try:
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            await client.post(
+                N8N_WEBHOOK_URL,
+                json={
+                    "email": user.email,
+                    "username": user.username,
+                    "order_id": order.id,
+                    "total_amount": order.total_amount,
+                    "games": games,
+                    "purchase_date": order.created_at.isoformat() if order.created_at else None
+                }
+            )
+    except Exception as e:
+        print(f"[Webhook] Failed to send purchase notification: {e}")
 
 
 class OrderService:
@@ -26,9 +47,8 @@ class OrderService:
             status=OrderStatus.PENDING.value
         )
         db.add(order)
-        db.flush()  # Flush to get the order ID
+        db.flush()
 
-        # Add order items
         for game_id in game_ids:
             game = db.query(Game).filter(Game.id == game_id).first()
             if game:
@@ -67,17 +87,29 @@ class OrderService:
         return order
 
     @staticmethod
-    def complete_order(db: Session, order_id: int) -> Order:
+    async def async_complete_order(db: Session, order_id: int, user: Optional[User] = None) -> Order:
         """Mark order as completed and create purchased game entries."""
         order = db.query(Order).filter(Order.id == order_id).first()
         if order:
             order.status = OrderStatus.COMPLETED.value
-            # Create PurchasedGame entries for each order item (avoid duplicates)
             for order_item in order.items:
                 PurchaseService.add_purchased_game(db, order.user_id, order_item.game_id)
 
             db.commit()
             db.refresh(order)
+
+            if user:
+                games = []
+                for item in order.items:
+                    game = db.query(Game).filter(Game.id == item.game_id).first()
+                    if game:
+                        games.append({
+                            "id": game.id,
+                            "name": game.name,
+                            "image_url": game.image_url,
+                            "price": item.price
+                        })
+                await _send_purchase_webhook(user, order, games)
         return order
 
     @staticmethod
